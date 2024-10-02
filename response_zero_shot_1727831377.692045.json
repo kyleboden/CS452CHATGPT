@@ -1,0 +1,62 @@
+{
+  "strategy": "zero_shot",
+  "prompt_prefix": "\n    CREATE TABLE IF NOT EXISTS Person (\n        PersonID INTEGER PRIMARY KEY AUTOINCREMENT,\n        FirstName TEXT NOT NULL,\n        LastName TEXT NOT NULL,\n        Email TEXT UNIQUE NOT NULL,\n        Phone TEXT,\n        LinkedIn TEXT,\n        Summary TEXT\n    );\n\n\n    CREATE TABLE IF NOT EXISTS Education (\n        EducationID INTEGER PRIMARY KEY AUTOINCREMENT,\n        PersonID INTEGER,\n        Degree TEXT NOT NULL,\n        Institution TEXT NOT NULL,\n        StartDate DATE NOT NULL,\n        EndDate DATE,\n        Description TEXT,\n        FOREIGN KEY (PersonID) REFERENCES Person(PersonID)\n    );\n\n\n    CREATE TABLE IF NOT EXISTS WorkExperience (\n        WorkExperienceID INTEGER PRIMARY KEY AUTOINCREMENT,\n        PersonID INTEGER,\n        JobTitle TEXT NOT NULL,\n        CompanyName TEXT NOT NULL,\n        StartDate DATE NOT NULL,\n        EndDate DATE,\n        JobDescription TEXT,\n        FOREIGN KEY (PersonID) REFERENCES Person(PersonID)\n    );\n\n Give me a sqlite select statement that answers the question. Only respond with sqlite syntax. If there is an error do not expalin it!",
+  "questionResults": [
+    {
+      "question": "What people have at least one year of work experience?",
+      "sql": "\nSELECT DISTINCT p.PersonID, p.FirstName, p.LastName, p.Email, p.Phone, p.LinkedIn, p.Summary\nFROM Person p\nJOIN WorkExperience w ON p.PersonID = w.PersonID\nWHERE (julianday(IFNULL(w.EndDate, 'now')) - julianday(w.StartDate)) >= 365;\n",
+      "queryRawResponse": "[]",
+      "friendlyResponse": "It looks like there are no people with at least one year of work experience.",
+      "error": "None"
+    },
+    {
+      "question": "What people have finished their education?",
+      "sql": "\nSELECT P.FirstName, P.LastName, E.Degree, E.Institution\nFROM Person P\nJOIN Education E ON P.PersonID = E.PersonID\nWHERE E.EndDate IS NOT NULL;\n",
+      "queryRawResponse": "[]",
+      "friendlyResponse": "It looks like there are no specific individuals listed as having finished their education.",
+      "error": "None"
+    },
+    {
+      "question": "What is the most popular degree?",
+      "sql": "\nSELECT Degree, COUNT(*) AS DegreeCount\nFROM Education\nGROUP BY Degree\nORDER BY DegreeCount DESC\nLIMIT 1;\n",
+      "queryRawResponse": "[('Master of Science in Data Science', 1)]",
+      "friendlyResponse": "The most popular degree is the Master of Science in Data Science!",
+      "error": "None"
+    },
+    {
+      "question": "What are the different schools in the database?",
+      "sql": "\nSELECT DISTINCT Institution FROM Education;\n",
+      "queryRawResponse": "[('Tech University',), ('Business School',), ('Data Institute',), ('Art University',)]",
+      "friendlyResponse": "Here are the schools in the database: Tech University, Business School, Data Institute, and Art University.",
+      "error": "None"
+    },
+    {
+      "question": "Is there anyone in the database that has worked in the same job as someone else?",
+      "sql": "\nSELECT JobTitle, CompanyName, COUNT(DISTINCT PersonID) as NumPeople\nFROM WorkExperience\nGROUP BY JobTitle, CompanyName\nHAVING NumPeople > 1;\n",
+      "queryRawResponse": "[]",
+      "friendlyResponse": "It looks like there aren't any matching records in the database for that job.",
+      "error": "None"
+    },
+    {
+      "question": "What person has the longest summary?",
+      "sql": "\nSELECT FirstName, LastName, Summary \nFROM Person \nORDER BY LENGTH(Summary) DESC \nLIMIT 1;\n",
+      "queryRawResponse": "[('David', 'Brown', 'Full-stack developer experienced in both front-end and back-end technologies.')]",
+      "friendlyResponse": "Sure! The person with the longest summary is David Brown, a full-stack developer experienced in both front-end and back-end technologies.",
+      "error": "None"
+    },
+    {
+      "question": "Who has the most work experience?",
+      "sql": "\nSELECT Person.FirstName, Person.LastName, COUNT(WorkExperience.WorkExperienceID) AS WorkExperienceCount\nFROM Person\nJOIN WorkExperience ON Person.PersonID = WorkExperience.PersonID\nGROUP BY Person.PersonID\nORDER BY WorkExperienceCount DESC\nLIMIT 1;\n",
+      "queryRawResponse": "[]",
+      "friendlyResponse": "It seems there\u2019s no specific answer to that question.",
+      "error": "None"
+    },
+    {
+      "question": "Will we have a problem texting any of the people?",
+      "sql": "\nSELECT Phone FROM Person WHERE Phone IS NULL;\n",
+      "queryRawResponse": "[]",
+      "friendlyResponse": "No, we won\u2019t have any problems texting them!",
+      "error": "None"
+    }
+  ]
+}
